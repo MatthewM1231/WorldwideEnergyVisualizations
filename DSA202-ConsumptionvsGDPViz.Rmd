@@ -1,0 +1,58 @@
+---
+title: "DSA 202 Final Project: GDP, Population, and Energy Per Capita Bubble Plot"
+author: "Matthew Menon"
+date: "2025-04-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(ggrepel)
+```
+
+
+## Data Handling
+```{r}
+energy_data <- read_csv("C:\\Users\\matth\\Desktop\\NCSU Spring 2025 Semester\\Introduction to Data Visualization\\Final Project\\WorldEnergyConsumption-All.csv")
+head(energy_data)
+
+uncleaned_data <- energy_data %>%
+  filter(year == 2018)
+head(uncleaned_data)
+
+highlight_countries = c("United States", "China", "India", "Germany", "Norway", "Qatar", "Dominica", "Iceland", "Central African Republic",
+                        "Burundi", "Democratic Republic of Congo", "Ethiopia", "Japan", "Russia", "Canada", "Mexico", "Brazil", "Indonesia")
+regions_to_remove <- c("World")
+
+energy_2018 = uncleaned_data %>% filter(!country %in% regions_to_remove)
+label_data = energy_2018 %>% filter(country %in% highlight_countries)
+head(energy_2018)
+
+energy_2018$population_bin <- cut(energy_2018$population, 
+                                  breaks = c(0, 1e7, 1e8, 5e8, 1e9, Inf), 
+                                  labels = c("<10M", "10–100M", "100–500M", "500M–1B", "1B+"))
+```
+
+## Data Plotting
+```{r pressure}
+ggplot(energy_2018, aes(x = gdp, y = energy_per_capita)) +
+  geom_point(aes(color = population_bin), size = 4) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed", show.legend = FALSE) +
+  geom_text_repel(data = label_data, aes(label = country), size = 4, color = "black") +
+  scale_x_log10() +
+  scale_y_log10() +
+  theme_minimal() +
+  labs(
+    title = "GDP vs. Energy Consumption per Capita in 2018 (Log-Scale Adjusted, Color = Population)",
+    x = "Gross Domestic Product",
+    y = "Energy Per Capita (Kilo-watt hours per person)",
+    color = "Population Range (persons)") +
+  theme(plot.title = element_text(color = "black", face = "bold", size = 16, hjust = 0.5)) +
+  theme(axis.title = element_text(color = "black", face = "bold", size = 12, hjust = 0.5))
+```
